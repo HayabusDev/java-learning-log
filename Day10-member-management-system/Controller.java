@@ -1,7 +1,6 @@
 import java.util.List;
 
 public class Controller {
-
     private final Service service;
 
     public Controller(Service service) {
