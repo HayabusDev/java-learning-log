@@ -61,5 +61,4 @@
 ---
 
 ## 学習ログ
-- Java学習 Day11
 - Map / for / enum / Result設計の実践練習として作成
