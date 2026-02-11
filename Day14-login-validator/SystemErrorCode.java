@@ -4,6 +4,8 @@ public enum SystemErrorCode implements ErrorCodeLike {
     DATA_NOT_FOUND("DATA_001", "登録されていません。"),
     DATA_DUPLICATE("DATA_002", "既に登録されています。"),
 
+    LOGIN_FAILED("AUTH_001", "IDまたはパスワードが正しくありません。"),
+
     SYSTEM_ERROR("SYS_001", "システムエラーが発生しました。"),
 
     UNKNOWN_ERROR("UNKNOWN", "不明なエラーが発生しました。");
