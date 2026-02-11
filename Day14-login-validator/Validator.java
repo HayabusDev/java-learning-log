@@ -19,14 +19,24 @@ public class Validator {
     }
 
     public Result<Void> validateRegistration(String userId, String password){
-        List<ValidationRule> combinedGate = new ArrayList<>();
-        combinedGate.addAll(userIdGate);
-        combinedGate.addAll(passwordGate);
-        List<ValidationRule> combinedFormat = new ArrayList<>();
-        combinedFormat.addAll(userIdRules);
-        combinedFormat.addAll(passwordRules);
+        List<ValidationRule> combinedGate = combineRulesList(userIdGate, passwordGate);
+        List<ValidationRule> combinedFormat = combineRulesList(userIdRules, passwordRules);
 
         return validateEngine(userId, password ,combinedGate, combinedFormat);
+    }
+
+    public Result<Void> validateLogin(String userId, String password){
+        List<ValidationRule> combinedGate = combineRulesList(userIdGate, passwordGate);
+        List<ValidationRule> emptyFormat = new ArrayList<>();
+
+        return validateEngine(userId, password, combinedGate, emptyFormat);
+    }
+
+    private List<ValidationRule> combineRulesList(List<ValidationRule> userIdRules, List<ValidationRule> passwordRules){
+        List<ValidationRule> combinedList = new ArrayList<>();
+        combinedList.addAll(userIdRules);
+        combinedList.addAll(passwordRules);
+        return combinedList;
     }
 
     private Result<Void> validateEngine(String userId, String password, List<ValidationRule> gateRules, List<ValidationRule> formatRules){
