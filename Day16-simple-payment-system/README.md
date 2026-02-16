@@ -1,4 +1,4 @@
-# Day16 - Simple Payment System（支払いシステム）
+# Day16 - Simple Payment System
 
 ## 作成物
 コンソール型 簡易決済アプリ（クレジットカード・現金・QR決済）
