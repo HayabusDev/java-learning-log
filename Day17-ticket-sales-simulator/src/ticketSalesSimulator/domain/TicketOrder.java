@@ -42,7 +42,7 @@ public class TicketOrder {
     }
 
     public void changeToCancelStatus(){
-        if(!canCancel()){
+        if (!canCancel()){
             return;
         }
         this.orderStatus = OrderStatus.CANCELED;
