@@ -1,27 +1,19 @@
 package tikectSalesSimulator.validator;
 
+import tikectSalesSimulator.domain.SaleStatus;
+
 import java.util.UUID;
 
 public class TicketValidator {
 
     //Eventチェック
-    public TicketValidationRule validateCreateEvent(String eventName, UUID eventId, int allSeats, int remainSeats){
-        TicketValidationRule eventIdRule = validateEventId(eventId);
+    public TicketValidationRule validateCreateEvent(String eventName, int allSeats){
 
         if (eventName == null || eventName.isBlank()){
             return TicketValidationRule.EVENT_NAME_NOT_EMPTY;
         }
-        if (eventIdRule != null){
-            return eventIdRule;
-        }
         if (allSeats <= 0){
             return TicketValidationRule.ALL_SEATS_POSITIVE;
-        }
-        if (remainSeats < 0){
-            return TicketValidationRule.REMAIN_SEATS_NON_NEGATIVE;
-        }
-        if (allSeats < remainSeats){
-            return TicketValidationRule.REMAIN_SEATS_NOT_BIGGER_ALL_SEATS;
         }
         return null;
     }
@@ -51,6 +43,20 @@ public class TicketValidator {
 
     public TicketValidationRule validateCancel(UUID orderId){
         return validateOrderId(orderId);
+    }
+
+    public TicketValidationRule validateChangeSaleStatus(UUID eventId, SaleStatus saleStatus){
+        TicketValidationRule eventIdRule = validateEventId(eventId);
+
+        if (eventIdRule != null){
+            return eventIdRule;
+        }
+
+        if (saleStatus == null){
+            return TicketValidationRule.SALE_STATUS_NOT_NULL;
+        }
+
+        return null;
     }
 
     //個別チェック
