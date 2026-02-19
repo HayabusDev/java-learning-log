@@ -57,9 +57,9 @@ public class Event {
         return true;
     }
 
-    public void purchase(int quantity){
+    public boolean purchase(int quantity){
         if (!canPurchase(quantity)){
-            return;
+            return false;
         }
 
         remainSeats = remainSeats - quantity;
@@ -67,14 +67,11 @@ public class Event {
         if (remainSeats == 0){
             changeStatus(SaleStatus.SOLD_OUT);
         }
+        return true;
     }
 
     public void cancel(int quantity){
-        if (quantity <= 0 || allSeats < remainSeats + quantity){
-            return;
-        }
-
-        if (!this.saleStatus.isCancelable()){
+        if (!cancelable(quantity)){
             return;
         }
 
@@ -83,6 +80,18 @@ public class Event {
         if (this.saleStatus == SaleStatus.SOLD_OUT){
             changeStatus(SaleStatus.ON_SALE);
         }
+    }
+
+    public boolean cancelable(int quantity){
+        if (quantity <= 0 || allSeats < remainSeats + quantity){
+            return false;
+        }
+
+        if (!this.saleStatus.isCancelable()){
+            return false;
+        }
+
+        return true;
     }
 
     public boolean canStartSale(){
@@ -96,11 +105,16 @@ public class Event {
         return true;
     }
 
-    public void changeStatus(SaleStatus nextSaleStatus){
+    public boolean changeStatus(SaleStatus nextSaleStatus){
+        if (nextSaleStatus == null){
+            throw new IllegalArgumentException("nextSaleStatus must not be null");
+        }
+
         if (!this.saleStatus.canTransitTo(nextSaleStatus)){
-            return;
+            return false;
         }
 
         this.saleStatus = nextSaleStatus;
+        return true;
     }
 }
