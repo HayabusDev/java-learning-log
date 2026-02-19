@@ -8,6 +8,7 @@ public class TicketOrder {
     private final UUID eventId;
     private final int purchaseQuantity;
     private OrderStatus orderStatus;
+    public static final int MAX_QUANTITY = 2;
 
     public TicketOrder(String buyerName, UUID orderId, UUID eventId, int purchaseQuantity, OrderStatus orderStatus){
         this.buyerName = buyerName;
