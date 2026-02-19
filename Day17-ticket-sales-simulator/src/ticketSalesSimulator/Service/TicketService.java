@@ -124,7 +124,7 @@ public class TicketService {
         return new ArrayList<>(eventRepository.findAllEvents().values());
     }
 
-    public Result<Void> purchaseTicket(String buyerName, UUID eventId, int purchaseQuantity){
+    public Result<TicketOrder> purchaseTicket(String buyerName, UUID eventId, int purchaseQuantity){
         //UI側で、Event一覧→番号選択で購入
         TicketValidationRule purchaseRules = ticketValidator.validatePurchase(eventId, buyerName, purchaseQuantity);
 
@@ -139,9 +139,9 @@ public class TicketService {
             return Result.failure(SystemErrorCode.DATA_NOT_FOUND);
         }
 
-        SafeAction<Void> action = new SafeAction<Void>() {
+        SafeAction<TicketOrder> action = new SafeAction<TicketOrder>() {
             @Override
-            public Result<Void> execute() {
+            public Result<TicketOrder> execute() {
                 //残り座席数減らす
                 boolean canPurchase = event.purchase(purchaseQuantity);
                 if (!canPurchase){
@@ -154,12 +154,12 @@ public class TicketService {
                     TicketOrder createdOrder = new TicketOrder(buyerName, orderId, eventId, purchaseQuantity, OrderStatus.ACTIVE); //OrderStatusはACTIVEで生成
                     //保存
                     orderRepository.saveOrder(createdOrder);
+                    return Result.success(createdOrder);
                 }catch (RuntimeException e){
                     //失敗したら在庫を戻す（補償トランザクション）
                     event.cancel(purchaseQuantity);
                     throw e;
                 }
-                return Result.success();
             }
         };
 
@@ -213,8 +213,8 @@ public class TicketService {
         return executeSafely(action, "cancelTicket", orderId.toString());
     }
 
-    public Result<Void> changeSaleStatus(UUID eventId, SaleStatus nextStatus){
-        TicketValidationRule changeStatusRules = ticketValidator.validateChangeSaleStatus(eventId, nextStatus);
+    public Result<Void> startSale(UUID eventId){
+        TicketValidationRule changeStatusRules = ticketValidator.validateChangeSaleStatus(eventId);
 
         //入力チェック
         if (changeStatusRules != null){
@@ -230,16 +230,45 @@ public class TicketService {
         SafeAction<Void> action = new SafeAction<Void>() {
             @Override
             public Result<Void> execute() {
-                //saleStatus 変更処理
-                boolean canChangeSaleStatus = event.changeStatus(nextStatus);
-                if (!canChangeSaleStatus){
+                //処理実行
+                boolean canStartSale = event.startSale();
+                if (!canStartSale){
                     return Result.failure(SystemErrorCode.OPERATION_NOT_ALLOWED);
                 }
                 return Result.success();
             }
         };
 
-        return executeSafely(action, "changeSaleStatus", eventId.toString() + " / " +nextStatus);
+        return executeSafely(action, "startSale", eventId.toString());
+    }
+
+    public Result<Void> closeSale(UUID eventId){
+        TicketValidationRule changeStatusRules = ticketValidator.validateChangeSaleStatus(eventId);
+
+        //入力チェック
+        if (changeStatusRules != null){
+            return Result.failure(changeStatusRules.getCode());
+        }
+
+        Event event = eventRepository.findEventById(eventId);
+        //存在チェック
+        if (event == null){
+            return Result.failure(SystemErrorCode.DATA_NOT_FOUND);
+        }
+
+        SafeAction<Void> action = new SafeAction<Void>() {
+            @Override
+            public Result<Void> execute() {
+                //処理実行
+                boolean canCloseSale = event.closeSale();
+                if (!canCloseSale){
+                    return Result.failure(SystemErrorCode.OPERATION_NOT_ALLOWED);
+                }
+                return Result.success();
+            }
+        };
+
+        return executeSafely(action, "closeSale", eventId.toString());
     }
 
     //SafeAction
