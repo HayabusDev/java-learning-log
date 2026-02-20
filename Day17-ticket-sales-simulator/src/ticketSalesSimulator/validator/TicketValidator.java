@@ -1,6 +1,6 @@
 package tikectSalesSimulator.validator;
 
-import tikectSalesSimulator.domain.SaleStatus;
+import tikectSalesSimulator.domain.Event;
 
 import java.util.UUID;
 
@@ -14,6 +14,9 @@ public class TicketValidator {
         }
         if (allSeats <= 0){
             return TicketValidationRule.ALL_SEATS_POSITIVE;
+        }
+        if (allSeats > Event.MAX_SEATS){
+            return TicketValidationRule.SEAT_COUNT_EXCEEDS_LIMIT;
         }
         return null;
     }
@@ -45,15 +48,10 @@ public class TicketValidator {
         return validateOrderId(orderId);
     }
 
-    public TicketValidationRule validateChangeSaleStatus(UUID eventId, SaleStatus saleStatus){
+    public TicketValidationRule validateChangeSaleStatus(UUID eventId){
         TicketValidationRule eventIdRule = validateEventId(eventId);
-
-        if (eventIdRule != null){
+        if (eventIdRule != null) {
             return eventIdRule;
-        }
-
-        if (saleStatus == null){
-            return TicketValidationRule.SALE_STATUS_NOT_NULL;
         }
 
         return null;
