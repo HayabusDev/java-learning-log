@@ -6,6 +6,7 @@ public enum TicketErrorCode implements ErrorCodeLike {
     REMAIN_SEATS_NEGATIVE("EVENT_003", "残り座席数が負数になっています。"),
     REMAIN_SEATS_BIGGER_ALL_SEATS("EVENT_004", "残り座席数が最大座席数を超えています。"),
     SALE_STATUS_NULL("EVENT_005", "saleStatus情報がありません。"),
+    SEAT_COUNT_EXCEEDS_LIMIT("EVENT_006", "座席の最大数を超えています。"),
 
     QUANTITY_NOT_POSITIVE("PURCHASE_001", "quantityが0以下です。"),
     BUYER_NAME_EMPTY("PURCHASE_002", "buyerNameが空です。"),
