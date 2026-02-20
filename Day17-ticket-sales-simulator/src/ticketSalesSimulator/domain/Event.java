@@ -8,6 +8,7 @@ public class Event {
     private final int allSeats;
     private int remainSeats;
     private SaleStatus saleStatus;
+    public static final int MAX_SEATS = 60000;
 
     public Event(String eventName, UUID eventId, SaleStatus saleStatus, int allSeats, int remainSeats){
         this.eventName = eventName;
@@ -16,6 +17,12 @@ public class Event {
 
         if (remainSeats < 0) {
             throw new IllegalArgumentException("remainSeats cannot be negative.");
+        }
+        if (allSeats <= 0){
+            throw new IllegalArgumentException("allSeats cannot be negative.");
+        }
+        if (allSeats > MAX_SEATS){
+            throw new IllegalArgumentException("allSeats cannot exceed MAX_SEATS.");
         }
         if (allSeats < remainSeats) {
             throw new IllegalArgumentException("remainSeats cannot exceed allSeats.");
@@ -94,18 +101,37 @@ public class Event {
         return true;
     }
 
-    public boolean canStartSale(){
+    private boolean canStartSale(){
         if (!this.saleStatus.canTransitTo(SaleStatus.ON_SALE)){
-            return false;
-        }
-
-        if (allSeats <= 0){
             return false;
         }
         return true;
     }
 
-    public boolean changeStatus(SaleStatus nextSaleStatus){
+    private boolean canCloseSale(){
+        if (!this.saleStatus.canTransitTo(SaleStatus.CLOSED)){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean startSale(){
+        if (!canStartSale()){
+            return false;
+        }
+        this.saleStatus = SaleStatus.ON_SALE;
+        return true;
+    }
+
+    public boolean closeSale(){
+        if (!canCloseSale()){
+            return false;
+        }
+        this.saleStatus = SaleStatus.CLOSED;
+        return true;
+    }
+
+    private boolean changeStatus(SaleStatus nextSaleStatus){
         if (nextSaleStatus == null){
             throw new IllegalArgumentException("nextSaleStatus must not be null");
         }
@@ -116,5 +142,13 @@ public class Event {
 
         this.saleStatus = nextSaleStatus;
         return true;
+    }
+
+
+    @Override
+    public String toString(){
+        return "イベントID: " + eventId + " | " + "イベント名: " + eventName + " | "
+                + "販売状態: " + saleStatus + " | " + "残り販売数: " + remainSeats + " | "
+                + "座席販売数: " + allSeats;
     }
 }
