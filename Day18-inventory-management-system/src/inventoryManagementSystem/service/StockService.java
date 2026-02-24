@@ -2,8 +2,8 @@ package inventoryManagementSystem.service;
 
 import inventoryManagementSystem.domain.Item;
 import inventoryManagementSystem.repository.ItemRepository;
+import inventoryManagementSystem.result.ItemErrorCode;
 import inventoryManagementSystem.result.Result;
-import inventoryManagementSystem.result.SystemErrorCode;
 import inventoryManagementSystem.validator.ItemValidator;
 import inventoryManagementSystem.valueObject.ItemId;
 import inventoryManagementSystem.valueObject.LowStockThreshold;
@@ -26,6 +26,10 @@ public class StockService {
 
     public Result<ItemId> registerItem (String itemName, Quantity initialQty, ReorderPoint reorderPoint, LowStockThreshold lowStockThreshold) {
         //Validator(itemName, initialQty, reorderPoint, lowStockThreshold)
+        Result<Void> validate = itemValidator.validateRegister(itemName, initialQty, reorderPoint, lowStockThreshold);
+        if (!validate.isSuccess()) {
+            return Result.failure(validate.getErrorCodeLikes());
+        }
 
         //重複チェック(名前重複禁止)
         Result<Void> isExist = checkDuplicateItemName(itemName);
@@ -43,8 +47,7 @@ public class StockService {
         Map<ItemId, Item> existingItems = itemRepository.findAll();
         for (Item  item : existingItems.values()) {
             if (Objects.equals(item.getName(), itemName)) {
-                //TODO ItemErrorCode 作成後、変更する
-                return Result.failure(SystemErrorCode.DATA_DUPLICATE);
+                return Result.failure(ItemErrorCode.ITEM_NAME_DUPLICATE);
             }
         }
         return Result.success();
@@ -52,6 +55,10 @@ public class StockService {
 
     public Result<Void> receiveStock (ItemId itemId, Quantity amount) {
         //入力チェック Validator(itemId, amount(健全性（null / 0以下）含む))
+        Result<Void> validate = itemValidator.validateReceiveAndShip(itemId, amount);
+        if (!validate.isSuccess()) {
+            return Result.failure(validate.getErrorCodeLikes());
+        }
 
         //存在チェック
         Result<Item> itemResult = isExist(itemId);
@@ -66,6 +73,10 @@ public class StockService {
 
     public Result<Void> shipStock (ItemId itemId, Quantity amount) {
         //入力チェック Validator(itemId, amount(健全性（null / 0以下）含む))
+        Result<Void> validate = itemValidator.validateReceiveAndShip(itemId, amount);
+        if (!validate.isSuccess()) {
+            return Result.failure(validate.getErrorCodeLikes());
+        }
 
         //存在チェック
         Result<Item> itemResult = isExist(itemId);
@@ -77,8 +88,7 @@ public class StockService {
 
         //amount条件チェック
         if (shippingItem.getQuantity().isLessThan(amount)) {
-            //TODO ItemErrorCode 作成後、変更する (INSUFFICIENT_STOCK)
-            return Result.failure(SystemErrorCode.OPERATION_NOT_ALLOWED);
+            return Result.failure(ItemErrorCode.INSUFFICIENT_STOCK);
         }
 
         shippingItem.ship(amount);
@@ -87,6 +97,10 @@ public class StockService {
 
     public Result<Void> deleteItem (ItemId itemId) {
         //入力チェック Validator(itemId)
+        Result<Void> validate = itemValidator.validateItemId(itemId);
+        if (!validate.isSuccess()) {
+            return Result.failure(validate.getErrorCodeLikes());
+        }
 
         //存在チェック
         Result<Item> itemResult = isExist(itemId);
@@ -99,12 +113,9 @@ public class StockService {
     }
 
     private Result<Item> isExist (ItemId itemId) {
-        //入力チェック Validator(itemId)
-
         Item item = itemRepository.findById(itemId);
         if (item == null) {
-            //TODO ItemErrorCode 作成後、変更する
-            return Result.failure(SystemErrorCode.DATA_NOT_FOUND);
+            return Result.failure(ItemErrorCode.ITEM_DATA_NOT_FOUND);
         }
         return Result.success(item);
     }
