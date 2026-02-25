@@ -52,4 +52,9 @@ public class ItemId {
     public int hashCode() {
         return this.itemId.hashCode();
     }
+
+    @Override
+    public String toString(){
+        return this.itemId.toString();
+    }
 }
