@@ -4,6 +4,8 @@ import inventoryManagementSystem.domain.Item;
 import inventoryManagementSystem.repository.ItemRepository;
 import inventoryManagementSystem.result.ItemErrorCode;
 import inventoryManagementSystem.result.Result;
+import inventoryManagementSystem.result.SafeAction;
+import inventoryManagementSystem.result.SystemErrorCode;
 import inventoryManagementSystem.validator.ItemValidator;
 import inventoryManagementSystem.valueObject.ItemId;
 import inventoryManagementSystem.valueObject.LowStockThreshold;
@@ -37,10 +39,17 @@ public class StockService {
             return Result.failure(isExist.getErrorCodeLikes());
         }
 
-        ItemId itemId = new ItemId(UUID.randomUUID());
-        Item createdItem = new Item(itemId, itemName, initialQty, reorderPoint, lowStockThreshold);
-        itemRepository.save(createdItem);
-        return Result.success(createdItem.getId());
+        SafeAction<ItemId> action = new SafeAction<ItemId>() {
+            @Override
+            public Result<ItemId> execute() {
+                ItemId itemId = new ItemId(UUID.randomUUID());
+                Item createdItem = new Item(itemId, itemName, initialQty, reorderPoint, lowStockThreshold);
+                itemRepository.save(createdItem);
+                return Result.success(createdItem.getId());
+            }
+        };
+
+        return executeSafely(action, "registerItem", itemName);
     }
 
     private Result<Void> checkDuplicateItemName (String itemName) {
@@ -66,9 +75,16 @@ public class StockService {
             return Result.failure(itemResult.getErrorCodeLikes());
         }
 
-        Item arrivalItem = itemResult.getData();
-        arrivalItem.receive(amount);
-        return Result.success();
+        SafeAction<Void> action = new SafeAction<Void>() {
+            @Override
+            public Result<Void> execute() {
+                Item arrivalItem = itemResult.getData();
+                arrivalItem.receive(amount);
+                return Result.success();
+            }
+        };
+
+        return executeSafely(action, "receiveStock", itemId.toString());
     }
 
     public Result<Void> shipStock (ItemId itemId, Quantity amount) {
@@ -91,8 +107,15 @@ public class StockService {
             return Result.failure(ItemErrorCode.INSUFFICIENT_STOCK);
         }
 
-        shippingItem.ship(amount);
-        return Result.success();
+        SafeAction<Void> action = new SafeAction<Void>() {
+            @Override
+            public Result<Void> execute() {
+                shippingItem.ship(amount);
+                return Result.success();
+            }
+        };
+
+        return executeSafely(action, "shipStock", itemId.toString());
     }
 
     public Result<Void> deleteItem (ItemId itemId) {
@@ -108,8 +131,15 @@ public class StockService {
             return Result.failure(itemResult.getErrorCodeLikes());
         }
 
-        itemRepository.deleteById(itemId);
-        return Result.success();
+        SafeAction<Void> action = new SafeAction<Void>() {
+            @Override
+            public Result<Void> execute() {
+                itemRepository.deleteById(itemId);
+                return Result.success();
+            }
+        };
+
+        return executeSafely(action, "deleteItem", itemId.toString());
     }
 
     private Result<Item> isExist (ItemId itemId) {
@@ -121,12 +151,51 @@ public class StockService {
     }
 
     public Result<List<Item>> listItems (){
-        //空なら成功、空リストを返す
-        return Result.success(convertToList());
+        SafeAction<List<Item>> action = new SafeAction<List<Item>>() {
+            @Override
+            public Result<List<Item>> execute() {
+                //空なら成功、空リストを返す
+                return Result.success(convertToList());
+            }
+        };
+
+        return executeSafely(action, "listItems", "no-input");
     }
 
     //MapをListに変換
     private List<Item> convertToList (){
         return new ArrayList<>(itemRepository.findAll().values());
+    }
+
+    //SafeAction
+    private <T> Result<T> executeSafely(SafeAction<T> action, String operationName, String inputValue){
+        try{
+            return action.execute();
+
+        }catch (IllegalArgumentException iae){
+
+            System.err.println("[ERROR] " + operationName);
+            System.err.println("input=" + inputValue);
+            iae.printStackTrace();
+
+            return Result.failure(SystemErrorCode.INPUT_INVALID);
+
+        }catch (IllegalStateException ise){
+
+            System.err.println("[ERROR] " + operationName);
+            System.err.println("input=" + inputValue);
+            ise.printStackTrace();
+
+            return Result.failure(SystemErrorCode.SYSTEM_ERROR);
+
+        }catch (RuntimeException re){
+
+            System.err.println("[FATAL] " + operationName);
+            System.err.println("input=" + inputValue);
+            re.printStackTrace();
+
+            return Result.failure(SystemErrorCode.SYSTEM_ERROR);
+
+        }
     }
 }
