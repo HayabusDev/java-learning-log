@@ -86,4 +86,11 @@ public class Item {
 
         this.quantity = this.quantity.subtractQuantity(amount);
     }
+
+    @Override
+    public String toString(){
+        return "商品ID: " + id + " | " + "商品名: " + name + " | "
+                + "在庫数: " + quantity + " | " + "発注点: " + reorderPoint + " | "
+                + "基準数: " + lowStockThreshold;
+    }
 }
