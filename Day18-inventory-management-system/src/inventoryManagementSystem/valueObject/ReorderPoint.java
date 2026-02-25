@@ -55,4 +55,9 @@ public class ReorderPoint {
     public int hashCode() {
         return this.point.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return String.valueOf(this.point);
+    }
 }
