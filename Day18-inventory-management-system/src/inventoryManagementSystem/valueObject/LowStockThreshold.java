@@ -54,4 +54,9 @@ public class LowStockThreshold {
     public int hashCode() {
         return this.threshold.hashCode();
     }
+
+    @Override
+    public String toString(){
+        return String.valueOf(this.threshold);
+    }
 }
